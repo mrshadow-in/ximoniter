@@ -1,0 +1,26 @@
+# Environment and Secrets
+.env
+.env.example
+
+# Project Data
+data/*.db
+data/*.sqlite
+logs/*.log
+
+# Dependencies
+node_modules/
+
+# Agent/CLI Configs (Sensitive)
+.gemini/
+.geminiignore
+design-system/
+
+# OS/System
+.DS_Store
+Thumbs.db
+
+# Build/Cache
+dist/
+build/
+__pycache__/
+*.pyc
