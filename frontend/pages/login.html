@@ -3,149 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - NOD</title>
+    <title>Sign In - NOD</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <style>
-        .login-container {
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background-color: #121212;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
         }
         .login-card {
-            background-color: #1e1e1e;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             width: 100%;
-            max-width: 400px;
-        }
-        .login-card h1 {
-            margin-top: 0;
-            margin-bottom: 1.5rem;
+            max-width: 360px;
             text-align: center;
-            color: #fff;
+            animation: fadeIn 600ms ease-out;
+        }
+        .login-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            letter-spacing: 1px;
         }
         .form-group {
-            margin-bottom: 1rem;
+            text-align: left;
+            margin-bottom: 1.5rem;
         }
         .form-group label {
             display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
             margin-bottom: 0.5rem;
-            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .form-group input {
+        .login-card input {
             width: 100%;
-            padding: 0.75rem;
-            border-radius: 4px;
-            border: 1px solid #333;
-            background-color: #2a2a2a;
-            color: #fff;
-            box-sizing: border-box;
-        }
-        .form-group input:focus {
-            outline: 2px solid #007bff;
-            border-color: transparent;
-        }
-        .login-button {
-            width: 100%;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
+            padding: 12px;
             font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
+        }
+        .btn-login {
+            width: 100%;
+            background-color: var(--color-cta);
+            color: #000;
+            padding: 14px;
+            font-size: 0.9rem;
             margin-top: 1rem;
         }
-        .login-button:hover {
-            background-color: #0056b3;
-        }
-        .login-button:disabled {
-            background-color: #444;
-            cursor: not-allowed;
-        }
-        #error-message {
-            background-color: #442222;
-            color: #ffaaaa;
-            padding: 0.75rem;
+        .error-message {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 10px;
             border-radius: 4px;
-            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
             display: none;
-            text-align: center;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    
-    <main class="login-container" id="main-content">
-        <div class="login-card">
-            <h1>NOD Login</h1>
-            
-            <!-- Accessibility Strategy: Live region for dynamic error announcements -->
-            <div id="error-message" role="alert" aria-live="polite"></div>
-            
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password">
-                </div>
-                <button type="submit" id="login-btn" class="login-button">Sign In</button>
-            </form>
-        </div>
-    </main>
+    <div class="login-card card">
+        <h2>NOD Dashboard</h2>
+        <div id="error-msg" class="error-message" role="alert"></div>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-login">Sign In</button>
+        </form>
+        <p style="margin-top: 2rem; font-size: 0.75rem; color: var(--color-text-muted);">
+            Network Operations Dashboard v1.0
+        </p>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="../assets/js/api.js"></script>
     <script>
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        // Redirect if already logged in
+        if (localStorage.getItem('nod_token')) {
+            window.location.href = 'dashboard.html';
+        }
+
+        const form = document.getElementById('login-form');
+        const errorDiv = document.getElementById('error-msg');
+        const submitBtn = form.querySelector('button');
+
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('login-btn');
-            const errorMsg = document.getElementById('error-message');
             
-            // UI state: Loading
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Signing in...';
-            errorMsg.style.display = 'none';
-            
+            errorDiv.style.display = 'none';
+            submitBtn.innerText = 'Authenticating...';
+            submitBtn.disabled = true;
+
             try {
-                // Use the configured api instance from api.js
-                const response = await api.post('/auth/login', { username, password });
+                // api.js interceptor handles the base path /api
+                const res = await window.api.post('/auth/login', { username, password });
                 
-                // On success: Save token and redirect
-                // The api response interceptor returns response.data
-                if (response.token) {
-                    localStorage.setItem('nod_token', response.token);
-                    window.location.href = 'dashboard.html';
-                } else {
-                    throw new Error('No token received from server');
+                if (res.success) {
+                    localStorage.setItem('nod_token', res.token);
+                    window.location.href = '../index.html';
                 }
-            } catch (error) {
-                console.error('Login failed:', error);
-                
-                // UI state: Error
-                errorMsg.textContent = error.response?.data?.error || 'Login failed. Please check your credentials.';
-                errorMsg.style.display = 'block';
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Sign In';
+            } catch (err) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = err.response?.data?.error || 'Authentication failed. Please check your credentials.';
+                submitBtn.innerText = 'Sign In';
+                submitBtn.disabled = false;
             }
         });
-
-        // Check if already logged in
-        if (localStorage.getItem('nod_token')) {
-            // Optional: Verify token or just redirect
-            // window.location.href = 'dashboard.html';
-        }
     </script>
 </body>
 </html>

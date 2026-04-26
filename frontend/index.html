@@ -4,29 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NOD - Network Operations Dashboard</title>
-    <link rel="stylesheet" href="assets/css/sidebar.css">
     <link rel="stylesheet" href="assets/css/main.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/sidebar.css">
 </head>
 <body>
     <a href="#content-frame" class="skip-link">Skip to main content</a>
+    
     <nav class="sidebar" aria-label="Main Navigation">
-        <div class="sidebar-header"><h1>NOD Dashboard</h1></div>
+        <div class="sidebar-header">
+            <h1>NOD Dashboard</h1>
+        </div>
+        
+        <div class="sidebar-label">Main Navigation</div>
         <a href="pages/dashboard.html" class="nav-item active" target="content-frame" onclick="setActive(this)">Dashboard</a>
         <a href="pages/proxmox.html" class="nav-item" target="content-frame" onclick="setActive(this)">Proxmox Analyzer</a>
+        
+        <div class="sidebar-label">Network</div>
+        <a href="pages/bgp-mgmt.html" class="nav-item" target="content-frame" onclick="setActive(this)">BGP Shifting</a>
         <a href="pages/bgp-tools.html" class="nav-item" target="content-frame" onclick="setActive(this)">BGP Tools</a>
         
-        <div style="padding: 20px 20px 5px; font-size: 10px; color: #8b949e; letter-spacing: 1px;">ADMINISTRATION</div>
+        <div class="sidebar-label">Administration</div>
         <a href="pages/users.html" class="nav-item" target="content-frame" onclick="setActive(this)">User Management</a>
         
-        <div style="padding: 20px 20px 5px; font-size: 10px; color: #8b949e; letter-spacing: 1px;">SYSTEM</div>
-        <button class="nav-item" onclick="logout()">Logout</button>
+        <div style="flex-grow: 1;"></div>
+        
+        <div class="sidebar-label">System</div>
+        <button class="nav-item" onclick="logout()" style="color: #ff7b72;">Logout</button>
     </nav>
+
     <main class="content-wrapper">
-        <iframe id="content-frame" name="content-frame" src="pages/dashboard.html" title="Main Content"></iframe>
+        <iframe id="content-frame" name="content-frame" src="pages/dashboard.html" title="Main Content Area"></iframe>
     </main>
+
     <script>
         // Check for authentication token
         if (!localStorage.getItem('nod_token')) {
@@ -39,8 +48,10 @@
         }
 
         function logout() {
-            localStorage.removeItem('nod_token');
-            window.location.href = 'pages/login.html';
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('nod_token');
+                window.location.href = 'pages/login.html';
+            }
         }
     </script>
 </body>

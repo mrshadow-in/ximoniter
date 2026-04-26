@@ -6,42 +6,148 @@
     <title>Dashboard - NOD</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <style>
-        .container { padding: 20px; color: #fff; background: #1e1e1e; min-height: 100vh; font-family: sans-serif; }
-        .banner { 
-            background: #ffc107; 
-            color: #000; 
-            padding: 10px; 
-            text-align: center; 
-            font-weight: bold; 
-            display: none; 
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
         }
-        .toggle-container { margin-top: 20px; }
-        button { padding: 10px 20px; cursor: pointer; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .banner {
+            background-color: #d29922;
+            color: #000;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            display: none;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(210, 153, 34, 0.2);
+        }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--color-background);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid var(--color-border);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--color-cta); border-color: var(--color-cta); }
+        input:checked + .slider:before { transform: translateX(24px); background-color: #000; }
     </style>
 </head>
-<body>
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    <div id="sandbox-banner" class="banner" role="status" aria-live="polite">SANDBOX MODE ACTIVE</div>
-    
-    <main class="container" id="main-content">
-        <h1>Dashboard</h1>
-        <p>Welcome to the NOD Management System.</p>
-        
-        <div id="error-message" style="color: #ff4444; margin-bottom: 10px; display: none;" role="alert"></div>
-        
-        <div class="toggle-container">
-            <button id="toggle-sandbox">Toggle Sandbox Mode</button>
+<body style="padding: 2rem;">
+    <div id="sandbox-banner" class="banner" role="status" aria-live="polite">
+        ⚠️ SANDBOX MODE ACTIVE: All BGP and Tunnel changes are simulated.
+    </div>
+
+    <div class="page-header">
+        <h1>Overview</h1>
+        <div class="switch-container">
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted);">Sandbox Mode</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="sandbox-toggle">
+                <span class="slider"></span>
+            </label>
         </div>
-        
-        <nav>
-            <a href="proxmox.html" style="color: #007bff;">View Proxmox Metrics</a>
-            <span style="color: #666; margin: 0 10px;">|</span>
-            <a href="bgp-tools.html" style="color: #007bff;">BGP Intelligence Tools</a>
-        </nav>
-    </main>
+    </div>
+
+    <div class="stats-grid">
+        <div class="card stat-card">
+            <span class="stat-label">System Status</span>
+            <span class="stat-value" style="color: var(--color-cta);">Operational</span>
+        </div>
+        <div class="card stat-card">
+            <span class="stat-label">Network Load</span>
+            <span class="stat-value" id="total-net">...</span>
+        </div>
+        <div class="card stat-card">
+            <span class="stat-label">Active Nodes</span>
+            <span class="stat-value" id="node-count">...</span>
+        </div>
+    </div>
+
+    <div class="card" style="min-height: 300px;">
+        <h3 style="margin-bottom: 1rem;">Network Events</h3>
+        <div id="event-log" style="font-family: monospace; font-size: 0.9rem; color: var(--color-text-muted);">
+            <div style="padding: 10px; border-bottom: 1px solid var(--color-border);">Waiting for system updates...</div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/app.js"></script>
+    <script>
+        // Dashboard specific UI logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('sandbox-toggle');
+            
+            // Initial state
+            window.api.get('/settings/sandbox').then(res => {
+                toggle.checked = res.sandboxMode;
+                updateSandboxUI(res.sandboxMode);
+            });
+
+            toggle.addEventListener('change', async () => {
+                const res = await window.api.post('/settings/sandbox', { enable: toggle.checked });
+                updateSandboxUI(res.sandboxMode);
+            });
+
+            function updateSandboxUI(active) {
+                document.getElementById('sandbox-banner').style.display = active ? 'block' : 'none';
+            }
+
+            // Stats from Proxmox WS
+            const nodeCount = document.getElementById('node-count');
+            const totalNet = document.getElementById('total-net');
+
+            // Listen for metrics in the shared WS initialized in app.js
+            // This requires app.js to expose the ws instance or use a custom event
+        });
+    </script>
 </body>
 </html>

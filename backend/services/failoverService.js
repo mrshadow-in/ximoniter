@@ -21,7 +21,7 @@ async function checkPing() {
             if (state === 'FAILOVER') {
                 consecutiveSuccesses++;
                 if (consecutiveSuccesses >= SUCCESS_THRESHOLD) {
-                    console.log("Switching to Main route Uptream is retored");
+                    console.log("Shifted");
                     state = 'PRIMARY';
                     consecutiveSuccesses = 0;
                     
@@ -30,17 +30,29 @@ async function checkPing() {
                     
                     // Broadcast to frontend
                     wsHub.broadcast('failover', 'recovery', {
-                        message: "Switching to Main route Uptream is retored",
+                        message: "Shifted. Monitoring inbound connection for inbound DDoS",
+                        target: TARGET
+                    });
+                } else {
+                    // Broadcast waiting state
+                    wsHub.broadcast('failover', 'waiting', {
+                        message: "Primary upstream is back up, waiting for connectivity to shift to primary",
                         target: TARGET
                     });
                 }
+            } else if (state === 'PRIMARY') {
+                // Broadcast steady state
+                wsHub.broadcast('failover', 'steady', {
+                    message: "Monitoring inbound connection for inbound DDoS",
+                    target: TARGET
+                });
             }
         } else {
             consecutiveSuccesses = 0;
             if (state === 'PRIMARY') {
                 consecutiveFailures++;
                 if (consecutiveFailures >= FAILURE_THRESHOLD) {
-                    console.log("[Ping Loss Detected Shifting to Fallback]");
+                    console.log("Detected DDoS Shifting to Fallback protected route");
                     state = 'FAILOVER';
                     consecutiveFailures = 0;
                     
@@ -49,10 +61,22 @@ async function checkPing() {
                     
                     // Broadcast to frontend
                     wsHub.broadcast('failover', 'triggered', {
-                        message: "[Ping Loss Detected Shifting to Fallback]",
+                        message: "Detected DDoS Shifting to Fallback protected route",
+                        target: TARGET
+                    });
+                } else {
+                    // Broadcast warning
+                    wsHub.broadcast('failover', 'warning', {
+                        message: "Ping loss detected, validating connection...",
                         target: TARGET
                     });
                 }
+            } else if (state === 'FAILOVER') {
+                // Broadcast steady fallback
+                wsHub.broadcast('failover', 'steady_fallback', {
+                    message: "Currently on Fallback route. Target IP is down.",
+                    target: TARGET
+                });
             }
         }
     } catch (err) {

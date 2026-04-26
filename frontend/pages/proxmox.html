@@ -5,82 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Proxmox Management - NOD</title>
     <link rel="stylesheet" href="../assets/css/main.css">
-    <link rel="stylesheet" href="../assets/css/charts.css">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .container { padding: 20px; color: #fff; background: #1e1e1e; min-height: 100vh; font-family: sans-serif; }
-        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px; }
-        .chart-container { background: #2d2d2d; padding: 20px; border-radius: 8px; height: 300px; }
-        .chart-container h3 { margin: 0 0 10px 0; font-size: 1rem; color: #aaa; }
-        .card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 6px; margin-top: 20px; }
-        input { padding: 8px; background: #0d1117; color: white; border: 1px solid #30363d; border-radius: 4px; }
-        button { padding: 8px 16px; background: #1a73e8; color: white; border: none; cursor: pointer; border-radius: 4px; }
-        h1 { margin-bottom: 20px; }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .chart-card {
+            background-color: var(--color-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+        .chart-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media (max-width: 992px) {
+            .config-grid { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+        .node-badge {
+            background: rgba(26, 115, 232, 0.1);
+            color: #58a6ff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .btn-test { background-color: var(--color-cta); color: #000; }
+        .btn-delete { background-color: #da3633; color: #fff; }
     </style>
 </head>
-<body>
-    <header>
-        <nav aria-label="Main Navigation">
-            <a href="#main-content" class="skip-link">Skip to main content</a>
-        </nav>
+<body style="padding: 2rem;">
+    <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+            <h1>Proxmox Analyzer</h1>
+            <p style="color: var(--color-text-muted); font-size: 0.9rem;">Real-time infrastructure performance monitoring</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label for="nodeId" style="font-size: 0.75rem; font-weight: 700; color: var(--color-text-muted);">ACTIVE NODE</label>
+            <input type="text" id="nodeId" value="pve1" style="width: 140px;">
+            <button id="refreshBtn" class="btn-primary" style="padding: 8px 16px;">Reload</button>
+        </div>
     </header>
 
-    <main id="main-content" class="container">
-        <h1>Proxmox Node Metrics</h1>
-        <section class="node-selector" aria-labelledby="node-selector-title">
-            <h2 id="node-selector-title" class="sr-only">Node Selection</h2>
-            <label for="nodeId">Node ID:</label>
-            <input type="text" id="nodeId" value="pve1">
-            <button id="refreshBtn">Refresh Chart Data</button>
-        </section>
+    <div class="charts-grid">
+        <div class="chart-card">
+            <span class="chart-title">CPU Utilization (%)</span>
+            <div class="chart-wrapper"><canvas id="cpuChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <span class="chart-title">Memory Usage (GB)</span>
+            <div class="chart-wrapper"><canvas id="memChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <span class="chart-title">Disk Storage (GB)</span>
+            <div class="chart-wrapper"><canvas id="diskChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <span class="chart-title">Network Throughput (MB/s)</span>
+            <div class="chart-wrapper"><canvas id="netChart"></canvas></div>
+        </div>
+    </div>
 
-        <section class="chart-section" aria-labelledby="chart-title">
-            <h2 id="chart-title">Resource Usage History</h2>
-            <div class="charts-grid">
-                <div class="chart-container" role="img" aria-label="CPU usage chart">
-                    <h3>CPU Usage (%)</h3>
-                    <canvas id="cpuChart"></canvas>
-                </div>
-                <div class="chart-container" role="img" aria-label="Memory usage chart">
-                    <h3>Memory Usage (GB)</h3>
-                    <canvas id="memChart"></canvas>
-                </div>
-                <div class="chart-container" role="img" aria-label="Disk usage chart">
-                    <h3>Disk Usage (GB)</h3>
-                    <canvas id="diskChart"></canvas>
-                </div>
-                <div class="chart-container" role="img" aria-label="Network traffic chart">
-                    <h3>Network Traffic (MB/s)</h3>
-                    <canvas id="netChart"></canvas>
-                </div>
-            </div>
-            <div id="chart-status" class="sr-only" aria-live="polite"></div>
-        </section>
-
-        <hr style="margin: 40px 0; border: 0; border-top: 1px solid #30363d;">
-
-        <section class="admin-section">
-            <h2>Node Configuration (Admin)</h2>
-            <div class="card">
-                <h3>Add New Node</h3>
-                <form id="add-node-form" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <input type="text" id="node-name" placeholder="Name (e.g. pve-main)" required>
-                    <input type="text" id="node-host" placeholder="Host IP" required>
-                    <input type="text" id="node-pve" placeholder="Node (e.g. pve)" required>
-                    <input type="text" id="node-tokenId" placeholder="Token ID" required>
-                    <input type="password" id="node-tokenSecret" placeholder="Token Secret" required>
-                    <button type="submit">Add Node</button>
-                </form>
-            </div>
-
-            <div class="card">
-                <h3>Configured Nodes</h3>
-                <div id="node-config-list">Loading configs...</div>
+    <div class="config-grid">
+        <section class="card">
+            <h2 style="font-size: 1.1rem; margin-bottom: 1.5rem;">Configured Clusters</h2>
+            <div id="node-config-list">
+                <div style="color: var(--color-text-muted);">Loading configurations...</div>
             </div>
         </section>
-    </main>
 
+        <section class="card">
+            <h2 style="font-size: 1.1rem; margin-bottom: 1.5rem;">Add New Node</h2>
+            <form id="add-node-form" style="display: flex; flex-direction: column; gap: 12px;">
+                <input type="text" id="node-name" placeholder="Friendly Name" required>
+                <input type="text" id="node-host" placeholder="Host IP / FQDN" required>
+                <input type="text" id="node-pve" placeholder="PVE Node ID (e.g. pve1)" required>
+                <input type="text" id="node-tokenId" placeholder="API Token ID" required>
+                <input type="password" id="node-tokenSecret" placeholder="API Token Secret" required>
+                <button type="submit" style="background: var(--color-cta); color: #000; margin-top: 10px;">Add Cluster</button>
+            </form>
+        </section>
+    </div>
+
+    <div id="chart-status" class="sr-only" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/proxmox.js"></script>
 </body>

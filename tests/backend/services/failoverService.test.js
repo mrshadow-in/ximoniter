@@ -24,10 +24,16 @@ async function testFailover() {
         failoverService.setState('PRIMARY');
         assert.strictEqual(failoverService.getState(), 'PRIMARY');
 
+        // Verify steady state broadcast
+        pingAlive = true;
+        await failoverService.checkPing();
+        assert.strictEqual(broadcastEvent, 'steady');
+
         // Simulate 3 failures (should still be PRIMARY)
         pingAlive = false;
         for (let i = 0; i < 3; i++) {
             await failoverService.checkPing();
+            assert.strictEqual(broadcastEvent, 'warning');
         }
         assert.strictEqual(failoverService.getState(), 'PRIMARY');
 

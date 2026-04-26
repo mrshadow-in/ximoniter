@@ -2,74 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - NOD</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <style>
-        body { padding: 20px; color: #c9d1d9; font-family: "Inter", sans-serif; background: #0d1117; margin: 0; }
-        .card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 6px; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #30363d; }
-        th { color: #8b949e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        input, select { padding: 8px; background: #0d1117; color: white; border: 1px solid #30363d; border-radius: 4px; }
-        button { padding: 8px 16px; background: #2ea043; color: white; border: none; cursor: pointer; border-radius: 4px; font-weight: 600; }
-        .btn-danger { background: #da3633; }
-        .badge { background: rgba(26, 115, 232, 0.15); color: #58a6ff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .user-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+        .user-table th {
+            text-align: left;
+            padding: 1rem;
+            color: var(--color-text-muted);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .user-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 0.9rem;
+        }
+        .user-table tr:last-child td {
+            border-bottom: none;
+        }
+        .role-badge {
+            background: rgba(88, 166, 255, 0.1);
+            color: #58a6ff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .role-super_admin { background: rgba(137, 87, 229, 0.1); color: #bc8cff; }
+        .role-admin { background: rgba(88, 166, 255, 0.1); color: #58a6ff; }
+        .role-staff { background: rgba(35, 134, 54, 0.1); color: #3fb950; }
+
+        .add-user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: flex-end;
+        }
     </style>
 </head>
-<body>
-    <header>
-        <nav aria-label="Main Navigation">
-            <a href="#main-content" class="skip-link">Skip to main content</a>
-        </nav>
+<body style="padding: 2rem;">
+    <header style="margin-bottom: 2rem;">
+        <h1>User Management</h1>
+        <p style="color: var(--color-text-muted);">Administrate system access and permission levels</p>
     </header>
 
-    <main id="main-content">
-        <h1>User Management</h1>
-
-        <section class="add-user-section">
-            <div class="card">
-                <h3>Add New User</h3>
-                <form id="add-user-form" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
-                    <div>
-                        <label for="new-username" style="display:block; font-size: 11px; color:#8b949e; margin-bottom:4px;">USERNAME</label>
-                        <input type="text" id="new-username" placeholder="Username" required>
-                    </div>
-                    <div>
-                        <label for="new-password" style="display:block; font-size: 11px; color:#8b949e; margin-bottom:4px;">PASSWORD</label>
-                        <input type="password" id="new-password" placeholder="Password" required>
-                    </div>
-                    <div>
-                        <label for="new-role" style="display:block; font-size: 11px; color:#8b949e; margin-bottom:4px;">ROLE</label>
-                        <select id="new-role">
-                            <option value="admin">Admin</option>
-                            <option value="staff">Staff</option>
-                            <option value="feature_user">Feature User</option>
-                        </select>
-                    </div>
-                    <button type="submit">Create Account</button>
-                </form>
+    <section class="card" style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1rem;">Create New Account</h3>
+        <form id="add-user-form" class="add-user-grid">
+            <div>
+                <label for="new-username" class="sr-only">Username</label>
+                <input type="text" id="new-username" placeholder="Username" required style="width: 100%;">
             </div>
-        </section>
-
-        <section class="user-list-section">
-            <div class="card">
-                <h3>System Users</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Role</th>
-                            <th>Last Login</th>
-                            <th style="text-align: right;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-list">
-                        <tr><td colspan="4">Loading users...</td></tr>
-                    </tbody>
-                </table>
+            <div>
+                <label for="new-password" class="sr-only">Password</label>
+                <input type="password" id="new-password" placeholder="Password" required style="width: 100%;">
             </div>
-        </section>
-    </main>
+            <div>
+                <label for="new-role" class="sr-only">Role</label>
+                <select id="new-role" style="width: 100%;">
+                    <option value="admin">Administrator</option>
+                    <option value="staff">Staff Operator</option>
+                    <option value="feature_user">Feature User</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary" style="height: 42px;">Provision User</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h3 style="margin-bottom: 1rem; font-size: 1rem;">Authenticated Users</h3>
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>Identity</th>
+                    <th>Access Level</th>
+                    <th>Last Active</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody id="user-list">
+                <tr><td colspan="4" style="color: var(--color-text-muted); text-align: center;">Querying database...</td></tr>
+            </tbody>
+        </table>
+    </section>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="../assets/js/api.js"></script>
@@ -82,30 +108,30 @@
                 if (response.success) {
                     list.innerHTML = response.data.map(u => `
                         <tr>
-                            <td><strong>${u.username}</strong></td>
-                            <td><span class="badge">${u.role}</span></td>
-                            <td style="font-size: 12px; color: #8b949e;">${u.last_login ? new Date(u.last_login).toLocaleString() : 'Never'}</td>
+                            <td><div style="font-weight: 600;">${u.username}</div></td>
+                            <td><span class="role-badge role-${u.role}">${u.role.replace('_', ' ')}</span></td>
+                            <td style="color: var(--color-text-muted); font-size: 0.8rem;">${u.last_login ? new Date(u.last_login).toLocaleString() : 'Never'}</td>
                             <td style="text-align: right;">
-                                <button class="btn-danger" onclick="deleteUser(${u.id}, '${u.username}')" style="padding: 4px 10px; font-size: 12px;">Delete</button>
+                                <button onclick="deleteUser(${u.id}, '${u.username}')" style="background: transparent; color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); padding: 5px 12px; font-size: 0.8rem;">Deauthorize</button>
                             </td>
                         </tr>
                     `).join('');
                 }
             } catch (e) {
-                console.error('Failed to load users:', e);
-                document.getElementById('user-list').innerHTML = '<tr><td colspan="4">Error loading users.</td></tr>';
+                console.error('User fetch error:', e);
+                document.getElementById('user-list').innerHTML = '<tr><td colspan="4">Error accessing user registry.</td></tr>';
             }
         }
 
         window.deleteUser = async function(id, username) {
-            if (username === 'admin') return alert('Cannot delete the primary admin account.');
-            if (!confirm(`Are you sure you want to delete user "${username}"?`)) return;
+            if (username === 'admin') return alert('The primary bootstrap account cannot be deleted.');
+            if (!confirm(`Are you sure you want to permanently revoke access for "${username}"?`)) return;
             
             try {
                 const res = await window.api.delete(`/users/${id}`);
                 if (res.success) loadUsers();
             } catch (e) {
-                alert('Failed to delete user: ' + (e.response?.data?.error || e.message));
+                alert('Deauthorization failed: ' + (e.response?.data?.error || e.message));
             }
         };
 
@@ -124,7 +150,7 @@
                     loadUsers();
                 }
             } catch (err) {
-                alert('Failed to create user: ' + (err.response?.data?.error || err.message));
+                alert('Provisioning failed: ' + (err.response?.data?.error || err.message));
             }
         });
 
