@@ -1,0 +1,7 @@
+/* charts.css */
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 40vh;
+    width: 80vw;
+}
