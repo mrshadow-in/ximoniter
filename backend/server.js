@@ -25,7 +25,12 @@ app.use('/api/bgp-tools', bgpToolsRoutes);
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
-  app.listen(PORT, () => {
+  const http = require('http');
+  const server = http.createServer(app);
+  const wsHub = require('./websocket/wsHub');
+  wsHub.init(server);
+  
+  server.listen(PORT, () => {
     console.log(`NOD Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });
 }
