@@ -10,7 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .container { padding: 20px; color: #fff; background: #1e1e1e; min-height: 100vh; font-family: sans-serif; }
-        .chart-container { background: #2d2d2d; padding: 20px; border-radius: 8px; margin-top: 20px; max-width: 800px; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px; }
+        .chart-container { background: #2d2d2d; padding: 20px; border-radius: 8px; height: 300px; }
+        .chart-container h3 { margin: 0 0 10px 0; font-size: 1rem; color: #aaa; }
         .card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 6px; margin-top: 20px; }
         input { padding: 8px; background: #0d1117; color: white; border: 1px solid #30363d; border-radius: 4px; }
         button { padding: 8px 16px; background: #1a73e8; color: white; border: none; cursor: pointer; border-radius: 4px; }
@@ -34,9 +36,24 @@
         </section>
 
         <section class="chart-section" aria-labelledby="chart-title">
-            <h2 id="chart-title">CPU History</h2>
-            <div class="chart-container" role="img" aria-label="Line chart showing CPU usage over the last hour">
-                <canvas id="cpuChart"></canvas>
+            <h2 id="chart-title">Resource Usage History</h2>
+            <div class="charts-grid">
+                <div class="chart-container" role="img" aria-label="CPU usage chart">
+                    <h3>CPU Usage (%)</h3>
+                    <canvas id="cpuChart"></canvas>
+                </div>
+                <div class="chart-container" role="img" aria-label="Memory usage chart">
+                    <h3>Memory Usage (GB)</h3>
+                    <canvas id="memChart"></canvas>
+                </div>
+                <div class="chart-container" role="img" aria-label="Disk usage chart">
+                    <h3>Disk Usage (GB)</h3>
+                    <canvas id="diskChart"></canvas>
+                </div>
+                <div class="chart-container" role="img" aria-label="Network traffic chart">
+                    <h3>Network Traffic (MB/s)</h3>
+                    <canvas id="netChart"></canvas>
+                </div>
             </div>
             <div id="chart-status" class="sr-only" aria-live="polite"></div>
         </section>

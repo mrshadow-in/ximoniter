@@ -33,6 +33,12 @@ if (require.main === module) {
   const wsHub = require('./websocket/wsHub');
   wsHub.init(server);
   
+  const proxmoxService = require('./services/proxmoxService');
+  proxmoxService.startPolling(5000); // 5s frequency
+
+  const failoverService = require('./services/failoverService');
+  failoverService.start();
+  
   server.listen(PORT, () => {
     console.log(`NOD Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });

@@ -9,7 +9,7 @@ axios.get = async (url) => {
         return {
             data: {
                 asn: 'AS13335',
-                name: 'CLOUDFLARENET',
+                as_name: 'CLOUDFLARENET',
                 country: 'US'
             }
         };
@@ -19,17 +19,22 @@ axios.get = async (url) => {
 
 async function testASNLookup() {
     try {
-        const res = await bgpToolsService.lookupASN('13335'); // Cloudflare
+        const res = await bgpToolsService.lookup('13335'); // Cloudflare
         assert.strictEqual(res.asn, '13335');
         assert.strictEqual(res.name, 'CLOUDFLARENET');
         assert.strictEqual(res.country, 'US');
         console.log("Task 9.1 IPInfo ASN Lookup Test Passed");
         
         // Test Cache
+        const currentGet = axios.get;
         axios.get = () => { throw new Error('Should not be called'); };
-        const cachedRes = await bgpToolsService.lookupASN('13335');
-        assert.strictEqual(cachedRes.asn, '13335');
-        console.log("Task 9.1 Cache Test Passed");
+        try {
+            const cachedRes = await bgpToolsService.lookup('13335');
+            assert.strictEqual(cachedRes.asn, '13335');
+            console.log("Task 9.1 Cache Test Passed");
+        } finally {
+            axios.get = currentGet;
+        }
     } finally {
         axios.get = originalGet;
     }

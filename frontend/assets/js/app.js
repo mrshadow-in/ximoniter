@@ -49,3 +49,32 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleBtn.addEventListener('click', toggleSandboxMode);
     }
 });
+
+function initGlobalWebSocket() {
+    const token = localStorage.getItem('nod_token');
+    if (!token) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+        try {
+            const payload = JSON.parse(event.data);
+            if (payload.channel === 'failover') {
+                if (payload.event === 'triggered') {
+                    console.error(payload.data.message);
+                } else if (payload.event === 'recovery') {
+                    console.log(payload.data.message);
+                }
+            }
+        } catch (e) {
+            console.error('Global WS Error:', e);
+        }
+    };
+    
+    ws.onclose = () => {
+        setTimeout(initGlobalWebSocket, 5000);
+    };
+}
+document.addEventListener('DOMContentLoaded', initGlobalWebSocket);

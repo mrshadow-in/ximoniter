@@ -8,6 +8,7 @@ router.use(verifyJWT);
 router.get('/config', proxmoxController.getConfig);
 router.post('/config', proxmoxController.addConfig);
 router.delete('/config/:id', proxmoxController.deleteConfig);
+router.post('/config/:id/test', proxmoxController.testConfigConnection);
 
 router.get('/:node/history', proxmoxController.getHistory);
 

@@ -54,3 +54,28 @@ exports.deleteConfig = (req, res) => {
     res.status(500).json({ success: false, error: err.message, code: 'INTERNAL_ERROR' });
   }
 };
+
+exports.testConfigConnection = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const config = db.prepare('SELECT * FROM proxmox_nodes WHERE id = ?').get(id);
+    if (!config) {
+      return res.status(404).json({
+        success: false,
+        error: 'Proxmox configuration not found',
+        code: 'NOT_FOUND'
+      });
+    }
+
+    const result = await proxmoxService.testConnection(config);
+    res.json(result);
+  } catch (error) {
+    console.error(`Error testing Proxmox connection for ID ${id}:`, error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      code: 'PROXMOX_CONNECTION_ERROR'
+    });
+  }
+};

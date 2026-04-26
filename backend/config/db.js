@@ -28,7 +28,13 @@ db.exec(`
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     cpu REAL NOT NULL,
     mem_used REAL NOT NULL,
-    mem_total REAL NOT NULL
+    mem_total REAL NOT NULL,
+    disk_used REAL DEFAULT 0,
+    disk_total REAL DEFAULT 0,
+    net_in REAL DEFAULT 0,
+    net_out REAL DEFAULT 0,
+    disk_read REAL DEFAULT 0,
+    disk_write REAL DEFAULT 0
   );
   CREATE INDEX IF NOT EXISTS idx_proxmox_metrics_node_time ON proxmox_metrics(node_id, timestamp);
 
@@ -43,5 +49,15 @@ db.exec(`
     reject_unauth BOOLEAN DEFAULT 0
   );
 `);
+
+// Migration: Add new metrics columns to existing proxmox_metrics table
+const newMetricColumns = ['disk_used', 'disk_total', 'net_in', 'net_out', 'disk_read', 'disk_write'];
+for (const col of newMetricColumns) {
+  try {
+    db.exec(`ALTER TABLE proxmox_metrics ADD COLUMN ${col} REAL DEFAULT 0;`);
+  } catch (err) {
+    // Column likely already exists
+  }
+}
 
 module.exports = db;

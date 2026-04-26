@@ -1,56 +1,72 @@
 /**
- * proxmox.js - Chart integration for Proxmox historical data
+ * proxmox.js - Real-time Chart integration for Proxmox data
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    const ctx = document.getElementById('cpuChart').getContext('2d');
     const nodeIdInput = document.getElementById('nodeId');
     const refreshBtn = document.getElementById('refreshBtn');
     const statusEl = document.getElementById('chart-status');
 
-    let cpuChart = new Chart(ctx, {
+    // Chart instances
+    let cpuChart, memChart, diskChart, netChart;
+
+    function createChart(ctxId, label, color, fill = true) {
+        const ctx = document.getElementById(ctxId).getContext('2d');
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: label,
+                    data: [],
+                    borderColor: color,
+                    backgroundColor: fill ? color.replace('1)', '0.1)') : 'transparent',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: fill,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 }, // Disable for performance
+                scales: {
+                    x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#30363d' } },
+                    y: { beginAtZero: true, ticks: { color: '#8b949e' }, grid: { color: '#30363d' } }
+                },
+                plugins: { legend: { labels: { color: '#e6edf3', boxWidth: 12 } } }
+            }
+        });
+    }
+
+    // Initialize charts
+    cpuChart = createChart('cpuChart', 'CPU Usage (%)', '#1a73e8');
+    cpuChart.options.scales.y.max = 100;
+
+    memChart = createChart('memChart', 'Memory Used (GB)', '#8957e5');
+    diskChart = createChart('diskChart', 'Disk Used (GB)', '#1abc9c');
+    
+    // Net chart has two datasets
+    const netCtx = document.getElementById('netChart').getContext('2d');
+    netChart = new Chart(netCtx, {
         type: 'line',
         data: {
             labels: [],
-            datasets: [{
-                label: 'CPU Usage (%)',
-                data: [],
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderWidth: 2,
-                tension: 0.1,
-                fill: true
-            }]
+            datasets: [
+                { label: 'Net In (MB/s)', data: [], borderColor: '#2ea043', borderWidth: 2, tension: 0.3, fill: false, pointRadius: 0 },
+                { label: 'Net Out (MB/s)', data: [], borderColor: '#1a73e8', borderWidth: 2, tension: 0.3, fill: false, pointRadius: 0 }
+            ]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
             scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Time',
-                        color: '#aaa'
-                    },
-                    ticks: { color: '#aaa' },
-                    grid: { color: '#444' }
-                },
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'Percentage (%)',
-                        color: '#aaa'
-                    },
-                    ticks: { color: '#aaa' },
-                    grid: { color: '#444' }
-                }
+                x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#30363d' } },
+                y: { beginAtZero: true, ticks: { color: '#8b949e' }, grid: { color: '#30363d' } }
             },
-            plugins: {
-                legend: {
-                    labels: { color: '#fff' }
-                }
-            }
+            plugins: { legend: { labels: { color: '#e6edf3', boxWidth: 12 } } }
         }
     });
 
@@ -59,40 +75,41 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!nodeId) return;
 
         try {
-            // Using the 'api' wrapper from api.js
             const response = await window.api.get(`/proxmox/${nodeId}/history?hours=1`);
             
             if (response.success && Array.isArray(response.data)) {
-                // Backend returns DESC by timestamp, reverse for the chart (L-R time flow)
-                const history = response.data.reverse();
+                const history = response.data; // Backend now returns ASC
                 
-                const labels = history.map(item => {
-                    const date = new Date(item.timestamp);
-                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                });
-                
-                const cpuData = history.map(item => item.cpu * 100); // Assuming stored as 0-1, converting to %
+                const labels = history.map(item => new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+                const cpuData = history.map(item => item.cpu * 100);
+                const memData = history.map(item => item.mem_used / (1024**3));
+                const diskData = history.map(item => item.disk_used / (1024**3));
+                const netInData = history.map(item => item.net_in / (1024**2));
+                const netOutData = history.map(item => item.net_out / (1024**2));
 
-                cpuChart.data.labels = labels;
-                cpuChart.data.datasets[0].data = cpuData;
-                cpuChart.update();
+                const update = (chart, l, d) => {
+                    chart.data.labels = l;
+                    chart.data.datasets[0].data = d;
+                    chart.update();
+                };
+
+                update(cpuChart, labels, cpuData);
+                update(memChart, labels, memData);
+                update(diskChart, labels, diskData);
                 
-                if (statusEl) {
-                    statusEl.textContent = `Chart updated with ${history.length} data points for node ${nodeId}.`;
-                }
+                netChart.data.labels = labels;
+                netChart.data.datasets[0].data = netInData;
+                netChart.data.datasets[1].data = netOutData;
+                netChart.update();
+                
+                if (statusEl) statusEl.textContent = `Loaded ${history.length} historical points.`;
             }
         } catch (error) {
             console.error('Failed to fetch Proxmox history:', error);
-            if (statusEl) {
-                statusEl.textContent = 'Failed to update chart data.';
-            }
         }
     }
 
     refreshBtn.addEventListener('click', fetchHistory);
-
-    // Initial load
-    fetchHistory();
 
     // --- ADMIN CONFIGURATION LOGIC ---
     const configList = document.getElementById('node-config-list');
@@ -102,30 +119,51 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await window.api.get('/proxmox/config');
             if (response.success) {
+                // AUTO-SELECT FIRST NODE
+                if (response.data.length > 0 && nodeIdInput.value === 'pve1') {
+                    nodeIdInput.value = response.data[0].name;
+                    fetchHistory();
+                }
+
                 configList.innerHTML = response.data.map(n => `
                     <div style="padding: 12px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: bold; color: #58a6ff;">${n.name}</div>
                             <div style="font-size: 12px; color: #8b949e;">${n.host}:${n.port} (Node: ${n.node})</div>
                         </div>
-                        <button onclick="deleteConfig(${n.id})" style="background: #da3633; padding: 4px 12px; font-size: 12px;">Delete</button>
+                        <div style="display: flex; gap: 5px;">
+                            <button data-testid="${n.id}" onclick="testConnection(${n.id}, this)" style="background: #2ea043; padding: 4px 12px; font-size: 12px;">Test</button>
+                            <button onclick="deleteConfig(${n.id})" style="background: #da3633; padding: 4px 12px; font-size: 12px;">Delete</button>
+                        </div>
                     </div>
                 `).join('') || '<div style="padding: 10px; color: #8b949e;">No nodes configured.</div>';
             }
         } catch (e) {
             console.error('Failed to load configs:', e);
-            configList.innerText = 'Error loading configurations.';
         }
     }
 
-    window.deleteConfig = async function(id) {
-        if (!confirm('Are you sure you want to delete this node configuration?')) return;
+    window.testConnection = async function(id, btn) {
+        const originalText = btn.innerText;
+        btn.innerText = '...';
+        btn.disabled = true;
         try {
-            const res = await window.api.delete(`/proxmox/config/${id}`);
-            if (res.success) loadConfigs();
+            const res = await window.api.post(`/proxmox/config/${id}/test`);
+            alert(res.success ? `Success: Proxmox ${res.data.version}` : 'Failed to connect');
         } catch (e) {
-            alert('Failed to delete node');
+            alert('Error: ' + (e.response?.data?.error || e.message));
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
+    };
+
+    window.deleteConfig = async function(id) {
+        if (!confirm('Delete this node?')) return;
+        try {
+            await window.api.delete(`/proxmox/config/${id}`);
+            loadConfigs();
+        } catch (e) { alert('Delete failed'); }
     };
 
     addNodeForm?.addEventListener('submit', async (e) => {
@@ -135,20 +173,48 @@ document.addEventListener('DOMContentLoaded', () => {
             host: document.getElementById('node-host').value,
             node: document.getElementById('node-pve').value,
             token_id: document.getElementById('node-tokenId').value,
-            token_secret: document.getElementById('node-tokenSecret').value,
-            rejectUnauthorized: false
+            token_secret: document.getElementById('node-tokenSecret').value
         };
-        
         try {
             const res = await window.api.post('/proxmox/config', payload);
-            if (res.success) {
-                addNodeForm.reset();
-                loadConfigs();
-            }
-        } catch (err) {
-            alert('Failed to add node: ' + (err.response?.data?.error || err.message));
-        }
+            if (res.success) { addNodeForm.reset(); loadConfigs(); }
+        } catch (err) { alert('Add failed: ' + (err.response?.data?.error || err.message)); }
     });
 
-    if (configList) loadConfigs();
+    loadConfigs();
+
+    // --- WEBSOCKET LIVE UPDATES ---
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+        try {
+            const payload = JSON.parse(event.data);
+            if (payload.channel === 'proxmox' && payload.event === 'metrics_update') {
+                const currentNodeId = nodeIdInput.value;
+                const nodeData = payload.data.find(d => d.nodeId === currentNodeId);
+                
+                if (nodeData) {
+                    const timeLabel = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    
+                    const updateChartLive = (chart, dataPoints) => {
+                        chart.data.labels.push(timeLabel);
+                        if (chart.data.labels.length > 100) chart.data.labels.shift();
+                        
+                        dataPoints.forEach((val, idx) => {
+                            chart.data.datasets[idx].data.push(val);
+                            if (chart.data.datasets[idx].data.length > 100) chart.data.datasets[idx].data.shift();
+                        });
+                        chart.update('none');
+                    };
+
+                    updateChartLive(cpuChart, [nodeData.cpu * 100]);
+                    updateChartLive(memChart, [nodeData.mem_used / (1024**3)]);
+                    updateChartLive(diskChart, [nodeData.disk_used / (1024**3)]);
+                    updateChartLive(netChart, [nodeData.net_in / (1024**2), nodeData.net_out / (1024**2)]);
+                }
+            }
+        } catch (e) { console.error('WS Error:', e); }
+    };
 });
