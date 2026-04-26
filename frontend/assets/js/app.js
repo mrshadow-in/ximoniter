@@ -11,8 +11,8 @@ function updateSandboxBanner(isSandbox) {
 
 async function checkSandboxMode() {
     try {
-        const response = await axios.get('/api/settings/sandbox');
-        updateSandboxBanner(response.data.sandboxMode);
+        const response = await api.get('/settings/sandbox');
+        updateSandboxBanner(response.sandboxMode);
     } catch (error) {
         console.error('Error checking sandbox mode:', error);
     }
@@ -26,8 +26,8 @@ async function toggleSandboxMode() {
     if (errorMsg) errorMsg.style.display = 'none';
 
     try {
-        const response = await axios.post('/api/settings/sandbox/toggle');
-        const isSandbox = response.data.sandboxMode;
+        const response = await api.post('/settings/sandbox/toggle');
+        const isSandbox = response.sandboxMode;
         updateSandboxBanner(isSandbox);
         console.log(`Sandbox Mode is now ${isSandbox ? 'ON' : 'OFF'}`);
     } catch (error) {

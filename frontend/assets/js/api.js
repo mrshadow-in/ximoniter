@@ -10,9 +10,9 @@ const api = axios.create({
     }
 });
 
-// Request interceptor for API Key / JWT if needed later
+// Request interceptor for API Key / JWT
 api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('nod_token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,12 +23,18 @@ api.interceptors.request.use(config => {
 
 // Response interceptor for global error handling
 api.interceptors.response.use(response => {
-    return response.data;
+    // Standardize response to return data directly if it's axios response
+    return response.data ? response.data : response;
 }, error => {
     if (error.response && error.response.status === 401) {
         // Handle unauthorized (e.g., redirect to login)
         console.warn('Unauthorized access, redirecting to login...');
-        // window.location.href = '/pages/login.html';
+        localStorage.removeItem('nod_token');
+        
+        // Prevent infinite redirect loops if we are already on login page
+        if (!window.location.pathname.endsWith('login.html')) {
+            window.location.href = '/pages/login.html';
+        }
     }
     return Promise.reject(error);
 });
