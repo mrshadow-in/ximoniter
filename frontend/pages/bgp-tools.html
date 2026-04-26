@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGP Tools - ASN Lookup</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <style>
+        body { padding: 20px; color: #c9d1d9; font-family: sans-serif; background: #0d1117; margin: 0; }
+        .card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 6px; }
+        input { padding: 8px; width: 200px; background: #0d1117; color: white; border: 1px solid #30363d; border-radius: 4px; }
+        button { padding: 8px 16px; background: #1a73e8; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        button:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
+        input:focus-visible { outline: 2px solid #58a6ff; outline-offset: -1px; }
+        pre { background: #0d1117; padding: 10px; border-radius: 4px; overflow-x: auto; border: 1px solid #30363d; margin-top: 20px; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+    </style>
+</head>
+<body>
+    <main>
+        <h2>BGP Intelligence Tools</h2>
+        <div class="card">
+            <!-- Accessibility: Wrap in form to handle Enter key naturally -->
+            <form onsubmit="event.preventDefault(); lookup();" style="display: flex; gap: 10px; align-items: center;">
+                <label for="asn-input">ASN Lookup: </label>
+                <input type="text" id="asn-input" placeholder="e.g. 13335" required aria-required="true">
+                <button type="submit">Search</button>
+            </form>
+            
+            <!-- Accessibility: Live region to announce status to screen readers -->
+            <div id="status-announcer" class="visually-hidden" aria-live="polite"></div>
+            
+            <pre id="result" style="display: none;" aria-label="Lookup Result"></pre>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        async function lookup() {
+            const asnInput = document.getElementById('asn-input');
+            const asn = asnInput.value.trim();
+            if(!asn) return;
+            
+            const resEl = document.getElementById('result');
+            const statusEl = document.getElementById('status-announcer');
+            
+            resEl.style.display = 'block';
+            resEl.innerText = 'Loading...';
+            // Accessibility: Announce loading state
+            statusEl.innerText = 'Loading ASN data for ' + asn;
+            
+            try {
+                // window.api (from api.js) uses an interceptor that returns response.data (the body)
+                const res = await window.api.get(`/bgp-tools/asn/${asn}`);
+                
+                // Backend returns { success: true, data: { asn, name, country } }
+                if (res && res.success) {
+                    // Correcting from res.data.data to res.data as per api.js behavior
+                    resEl.innerText = JSON.stringify(res.data, null, 2);
+                    // Accessibility: Announce success
+                    statusEl.innerText = 'Search complete. ASN data displayed.';
+                } else {
+                    throw new Error(res?.error || 'Failed to fetch data');
+                }
+            } catch (e) {
+                const errorMsg = e.response?.data?.error || e.message;
+                resEl.innerText = 'Error: ' + errorMsg;
+                // Accessibility: Announce error
+                statusEl.innerText = 'Error: ' + errorMsg;
+            }
+        }
+    </script>
+</body>
+</html>
