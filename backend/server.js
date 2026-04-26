@@ -8,9 +8,9 @@ app.use(express.json());
 // Serve static frontend files
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Default route to serve the dashboard
+// Default route to serve the app shell
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/dashboard.html'));
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // Routes will be mounted here
