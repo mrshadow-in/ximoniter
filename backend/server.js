@@ -13,8 +13,10 @@ app.get('/', (req, res) => {
 });
 
 // Routes will be mounted here
+const authRoutes = require('./routes/auth');
 const proxmoxRoutes = require('./routes/proxmox');
 const settingsRoutes = require('./routes/settings');
+app.use('/api/auth', authRoutes);
 app.use('/api/proxmox', proxmoxRoutes);
 app.use('/api/settings', settingsRoutes);
 
