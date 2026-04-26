@@ -32,3 +32,10 @@ body {
 .skip-link:focus {
     top: 0;
 }
+
+/* Accessibility: Focus visible ring */
+:focus-visible {
+    outline: 3px solid #007bff;
+    outline-offset: 2px;
+}
+
