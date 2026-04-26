@@ -38,7 +38,7 @@
 │   │   ├── bgpService.js            ← node-routeros wrapper for BGP ops
 │   │   ├── tunnelService.js         ← EOIP tunnel control via RouterOS API
 │   │   ├── proxmoxService.js        ← Proxmox REST API integration
-│   │   ├── bgpToolsService.js       ← BGPView + IPInfo API + cache
+│   │   ├── bgpToolsService.js       ← IPInfo API + cache
 │   │   ├── pingService.js           ← node-ping wrapper + stats tracking
 │   │   ├── failoverService.js       ← Failover state machine + scheduler
 │   │   └── logService.js            ← Structured JSON logger
@@ -108,7 +108,7 @@ server.js
   │           └── services/* (business logic)
   │                 ├── bgpService.js → node-routeros → MikroTik
   │                 ├── proxmoxService.js → axios → Proxmox API
-  │                 ├── bgpToolsService.js → axios → BGPView/IPInfo
+  │                 ├── bgpToolsService.js → axios → IPInfo
   │                 ├── pingService.js → node-ping
   │                 └── failoverService.js → bgpService + tunnelService
   └── websocket/wsHub.js
@@ -410,5 +410,5 @@ try {
 | VALIDATION_ERROR | 422 | Bad input |
 | ROUTER_OFFLINE | 503 | Cannot reach MikroTik |
 | PROXMOX_ERROR | 502 | Proxmox API error |
-| EXTERNAL_API_ERROR | 502 | BGPView/IPInfo failure |
+| EXTERNAL_API_ERROR | 502 | IPInfo failure |
 | INTERNAL_ERROR | 500 | Unexpected server error |

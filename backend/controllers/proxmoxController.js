@@ -1,3 +1,4 @@
+const db = require('../config/db');
 const proxmoxService = require('../services/proxmoxService');
 
 exports.getHistory = async (req, res) => {
@@ -14,11 +15,7 @@ exports.getHistory = async (req, res) => {
 
   try {
     const data = await proxmoxService.getHistory(node, hours);
-    
-    res.json({
-      success: true,
-      data
-    });
+    res.json({ success: true, data });
   } catch (error) {
     console.error('Error fetching proxmox history:', error);
     res.status(500).json({
@@ -26,5 +23,34 @@ exports.getHistory = async (req, res) => {
       error: 'Failed to fetch historical metrics',
       code: 'PROXMOX_ERROR'
     });
+  }
+};
+
+exports.getConfig = (req, res) => {
+  try {
+    const rows = db.prepare('SELECT id, name, host, port, node, token_id, reject_unauth FROM proxmox_nodes').all();
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, code: 'INTERNAL_ERROR' });
+  }
+};
+
+exports.addConfig = (req, res) => {
+  try {
+    const { name, host, port, node, token_id, token_secret, rejectUnauthorized } = req.body;
+    const stmt = db.prepare(`INSERT INTO proxmox_nodes (name, host, port, node, token_id, token_secret, reject_unauth) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+    stmt.run(name, host, port || 8006, node, token_id, token_secret, rejectUnauthorized ? 1 : 0);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, code: 'INTERNAL_ERROR' });
+  }
+};
+
+exports.deleteConfig = (req, res) => {
+  try {
+    db.prepare('DELETE FROM proxmox_nodes WHERE id = ?').run(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, code: 'INTERNAL_ERROR' });
   }
 };

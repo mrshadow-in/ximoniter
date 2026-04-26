@@ -18,10 +18,13 @@ const authRoutes = require('./routes/auth');
 const proxmoxRoutes = require('./routes/proxmox');
 const settingsRoutes = require('./routes/settings');
 const bgpToolsRoutes = require('./routes/bgpTools');
+const usersRoutes = require('./routes/users');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/proxmox', proxmoxRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/bgp-tools', bgpToolsRoutes);
+app.use('/api/users', usersRoutes);
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {

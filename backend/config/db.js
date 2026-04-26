@@ -31,6 +31,17 @@ db.exec(`
     mem_total REAL NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_proxmox_metrics_node_time ON proxmox_metrics(node_id, timestamp);
+
+  CREATE TABLE IF NOT EXISTS proxmox_nodes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    host TEXT NOT NULL,
+    port INTEGER DEFAULT 8006,
+    node TEXT NOT NULL,
+    token_id TEXT NOT NULL,
+    token_secret TEXT NOT NULL,
+    reject_unauth BOOLEAN DEFAULT 0
+  );
 `);
 
 module.exports = db;

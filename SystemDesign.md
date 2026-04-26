@@ -25,7 +25,7 @@ The Network Operations Dashboard (NOD) is a centralized, real-time infrastructur
   └────┬────┘   └─────┬─────┘      └──────┬──────┘   └──────┬──────┘
        │              │                    │                  │
   RouterOS API   Proxmox REST         Public APIs        node-ping
-  (node-routeros) (HTTPS/Token)      (bgpview.io etc.)
+  (node-routeros) (HTTPS/Token)      (ipinfo.io etc.)
 ```
 
 ---
@@ -197,7 +197,6 @@ WebSocket Client connects
 
 | API | Base URL | Rate Limit |
 |-----|----------|-----------|
-| BGPView | https://api.bgpview.io | 45 req/min |
 | IPInfo | https://ipinfo.io | 50k/month free |
 | RIPEstat | https://stat.ripe.net | Fair use |
 
@@ -212,9 +211,9 @@ Eviction: TTL-based, no LRU needed (low volume)
 **Query Routing:**
 
 ```
-/api/bgp-tools/asn/13335   → bgpview /asn/13335 + /asn/13335/prefixes
-/api/bgp-tools/ip/8.8.8.8  → ipinfo.io/8.8.8.8 + bgpview /ip/8.8.8.8
-/api/bgp-tools/prefix/...  → bgpview /prefix/{net}/{cidr}
+/api/bgp-tools/asn/13335   → ipinfo.io/AS13335/json
+/api/bgp-tools/ip/8.8.8.8  → ipinfo.io/8.8.8.8/json
+/api/bgp-tools/prefix/...  → ripestat /data/prefix-overview/...
 ```
 
 ---

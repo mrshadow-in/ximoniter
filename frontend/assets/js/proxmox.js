@@ -93,4 +93,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial load
     fetchHistory();
+
+    // --- ADMIN CONFIGURATION LOGIC ---
+    const configList = document.getElementById('node-config-list');
+    const addNodeForm = document.getElementById('add-node-form');
+
+    async function loadConfigs() {
+        try {
+            const response = await window.api.get('/proxmox/config');
+            if (response.success) {
+                configList.innerHTML = response.data.map(n => `
+                    <div style="padding: 12px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: bold; color: #58a6ff;">${n.name}</div>
+                            <div style="font-size: 12px; color: #8b949e;">${n.host}:${n.port} (Node: ${n.node})</div>
+                        </div>
+                        <button onclick="deleteConfig(${n.id})" style="background: #da3633; padding: 4px 12px; font-size: 12px;">Delete</button>
+                    </div>
+                `).join('') || '<div style="padding: 10px; color: #8b949e;">No nodes configured.</div>';
+            }
+        } catch (e) {
+            console.error('Failed to load configs:', e);
+            configList.innerText = 'Error loading configurations.';
+        }
+    }
+
+    window.deleteConfig = async function(id) {
+        if (!confirm('Are you sure you want to delete this node configuration?')) return;
+        try {
+            const res = await window.api.delete(`/proxmox/config/${id}`);
+            if (res.success) loadConfigs();
+        } catch (e) {
+            alert('Failed to delete node');
+        }
+    };
+
+    addNodeForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('node-name').value,
+            host: document.getElementById('node-host').value,
+            node: document.getElementById('node-pve').value,
+            token_id: document.getElementById('node-tokenId').value,
+            token_secret: document.getElementById('node-tokenSecret').value,
+            rejectUnauthorized: false
+        };
+        
+        try {
+            const res = await window.api.post('/proxmox/config', payload);
+            if (res.success) {
+                addNodeForm.reset();
+                loadConfigs();
+            }
+        } catch (err) {
+            alert('Failed to add node: ' + (err.response?.data?.error || err.message));
+        }
+    });
+
+    if (configList) loadConfigs();
 });

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Proxmox Management - NOD</title>
-    <!-- Use relative paths since this is in /pages/ -->
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/charts.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -12,6 +11,9 @@
     <style>
         .container { padding: 20px; color: #fff; background: #1e1e1e; min-height: 100vh; font-family: sans-serif; }
         .chart-container { background: #2d2d2d; padding: 20px; border-radius: 8px; margin-top: 20px; max-width: 800px; }
+        .card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 6px; margin-top: 20px; }
+        input { padding: 8px; background: #0d1117; color: white; border: 1px solid #30363d; border-radius: 4px; }
+        button { padding: 8px 16px; background: #1a73e8; color: white; border: none; cursor: pointer; border-radius: 4px; }
         h1 { margin-bottom: 20px; }
     </style>
 </head>
@@ -27,8 +29,8 @@
         <section class="node-selector" aria-labelledby="node-selector-title">
             <h2 id="node-selector-title" class="sr-only">Node Selection</h2>
             <label for="nodeId">Node ID:</label>
-            <input type="text" id="nodeId" value="pve1" style="padding: 5px; border-radius: 4px; border: 1px solid #444; background: #333; color: white;">
-            <button id="refreshBtn" style="padding: 5px 15px; cursor: pointer; border-radius: 4px; border: none; background: #007bff; color: white;">Refresh Chart Data</button>
+            <input type="text" id="nodeId" value="pve1">
+            <button id="refreshBtn">Refresh Chart Data</button>
         </section>
 
         <section class="chart-section" aria-labelledby="chart-title">
@@ -38,9 +40,30 @@
             </div>
             <div id="chart-status" class="sr-only" aria-live="polite"></div>
         </section>
+
+        <hr style="margin: 40px 0; border: 0; border-top: 1px solid #30363d;">
+
+        <section class="admin-section">
+            <h2>Node Configuration (Admin)</h2>
+            <div class="card">
+                <h3>Add New Node</h3>
+                <form id="add-node-form" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="text" id="node-name" placeholder="Name (e.g. pve-main)" required>
+                    <input type="text" id="node-host" placeholder="Host IP" required>
+                    <input type="text" id="node-pve" placeholder="Node (e.g. pve)" required>
+                    <input type="text" id="node-tokenId" placeholder="Token ID" required>
+                    <input type="password" id="node-tokenSecret" placeholder="Token Secret" required>
+                    <button type="submit">Add Node</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Configured Nodes</h3>
+                <div id="node-config-list">Loading configs...</div>
+            </div>
+        </section>
     </main>
 
-    <!-- Scripts -->
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/proxmox.js"></script>
 </body>

@@ -9,18 +9,16 @@ const token = jwt.sign({ id: 1, role: 'admin' }, env.JWT_SECRET);
 // Mock axios
 const originalGet = axios.get;
 axios.get = async (url) => {
-    if (url.includes('api.bgpview.io/asn/13335')) {
+    if (url.includes('ipinfo.io/AS13335/json')) {
         return {
             data: {
-                data: {
-                    asn: 13335,
-                    name: 'CLOUDFLARENET',
-                    country_code: 'US'
-                }
+                asn: 'AS13335',
+                name: 'CLOUDFLARENET',
+                country: 'US'
             }
         };
     }
-    throw new Error('Not found');
+    throw new Error('Not found: ' + url);
 };
 
 async function testAPI() {

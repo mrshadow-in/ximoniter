@@ -5,18 +5,16 @@ const assert = require('assert');
 // Mock axios
 const originalGet = axios.get;
 axios.get = async (url) => {
-    if (url.includes('api.bgpview.io/asn/13335')) {
+    if (url.includes('ipinfo.io/AS13335/json')) {
         return {
             data: {
-                data: {
-                    asn: 13335,
-                    name: 'CLOUDFLARENET',
-                    country_code: 'US'
-                }
+                asn: 'AS13335',
+                name: 'CLOUDFLARENET',
+                country: 'US'
             }
         };
     }
-    throw new Error('Not found');
+    throw new Error('Not found: ' + url);
 };
 
 async function testASNLookup() {
@@ -24,13 +22,14 @@ async function testASNLookup() {
         const res = await bgpToolsService.lookupASN('13335'); // Cloudflare
         assert.strictEqual(res.asn, '13335');
         assert.strictEqual(res.name, 'CLOUDFLARENET');
-        console.log("Task 5.1 ASN Lookup Test Passed");
+        assert.strictEqual(res.country, 'US');
+        console.log("Task 9.1 IPInfo ASN Lookup Test Passed");
         
         // Test Cache
         axios.get = () => { throw new Error('Should not be called'); };
         const cachedRes = await bgpToolsService.lookupASN('13335');
         assert.strictEqual(cachedRes.asn, '13335');
-        console.log("Task 5.1 Cache Test Passed");
+        console.log("Task 9.1 Cache Test Passed");
     } finally {
         axios.get = originalGet;
     }
